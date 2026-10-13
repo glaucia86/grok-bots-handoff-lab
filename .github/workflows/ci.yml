@@ -1,0 +1,46 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  scripts:
+    name: Scripts (Python ${{ matrix.python }})
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python: ["3.9", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Compile all scripts
+        run: python -m compileall -q scripts
+      - name: Offline test (no API key)
+        env:
+          OPENAI_API_KEY: ""
+          MEM0_API_KEY: ""
+        run: |
+          if [ -d tests ]; then
+            python -m unittest discover -s tests -v
+          else
+            echo "No tests/ folder yet, skipping."
+          fi
+
+  links:
+    name: Links in Markdown
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: lycheeverse/lychee-action@v2
+        with:
+          # TODO: drop 'assets/' once assets/hero.png exists, and the repo URL once it is public
+          args: --no-progress --include-fragments --exclude 'assets/' --exclude 'github.com/glaucia86/grok-bots-handoff-lab' './**/*.md'
+          fail: true
