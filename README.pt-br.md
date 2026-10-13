@@ -92,7 +92,7 @@ Para guardar as camadas fora da máquina, usamos o [Mem0](https://mem0.ai), semp
 
 ## Resultados
 
-A versão curta: uma nota de 250 palavras sozinha guardou de 28% a 40% do peso dos fatos e respondeu 12 de 30 perguntas; a nota mais os itens do registro e os blocos de origem citados por eles (condição G) respondeu 26 e 25 de 30, a 1-3 acertos do chat inteiro, com cerca de 21-22% dos tokens. O Graphify como contexto e os IDs tipados gerados por modelo não ajudaram. As tabelas completas estão abaixo.
+A versão curta: uma nota de 250 palavras sozinha guardou de 28% a 40% do peso dos fatos; a nota de 400 palavras usada nos testes de busca respondeu 12 de 30 perguntas. A nota de 400 palavras mais os itens do registro e os blocos de origem citados por eles (condição G) respondeu 26 e 25 de 30, a 1-3 acertos do chat inteiro, com cerca de 21-22% dos tokens. O Graphify como contexto e os IDs tipados gerados por modelo não ajudaram. As tabelas completas estão abaixo.
 
 ![Como os testes foram montados](diagramas/diagrama-4-metodo.png)
 
