@@ -1,3 +1,8 @@
+<!-- TODO(hero): assets/hero.png é uma ilustração original em produção (bots trabalhando em equipe; sem o logo oficial do Grok). -->
+<p align="center">
+  <img src="assets/hero.png" alt="Um pequeno time de bots de IA passando uma nota de handoff curta entre si" width="720">
+</p>
+
 <h1 align="center">Memória fora do chat</h1>
 
 <p align="center">
@@ -18,17 +23,17 @@
   <a href="https://github.com/glaucia86/grok-bots-handoff-lab/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/glaucia86/grok-bots-handoff-lab/actions/workflows/ci.yml/badge.svg"></a>
 </p>
 
-> **Status: tutorial de pesquisa preliminar.** Os números vêm de uma única conversa real de cerca de 11,8 mil tokens, com uma rodada por condição e juízes automáticos. Leia como evidência preliminar, não como prova.
->
-> **Status da verificação.** O teste offline e o passo 4.1 foram executados e passam. Os passos 4.1 a 4.6 foram executados uma vez com a conversa sintética (o passo 4.4, Mem0, com um `user_id` de teste separado).
+> **O seu chat de IA não precisa lembrar de tudo. Ele precisa saber onde procurar.**
+
+> **Status: rascunho.** Os números vêm de uma única conversa real de cerca de 11,8 mil tokens, com uma rodada por condição e juízes automáticos: evidência preliminar, não prova. Os passos 4.1 a 4.6 foram executados uma vez com a conversa sintética (o passo 4.4, Mem0, com um `user_id` de teste separado).
 
 ## Sumário
 
-1. [Por que isto existe](#por-que-isto-existe)
-2. [O que você vai aprender](#o-que-você-vai-aprender)
+1. [O que é isto](#o-que-é-isto)
+2. [Começo rápido](#começo-rápido)
 3. [Como usar este tutorial](#como-usar-este-tutorial)
-4. [Rodar localmente em cinco minutos](#rodar-localmente-em-cinco-minutos)
-5. [A ideia em uma imagem](#a-ideia-em-uma-imagem)
+4. [Rodar localmente](#rodar-localmente)
+5. [Como funciona](#como-funciona)
 6. [Resultados](#resultados)
 7. [Limites](#limites)
 8. [Parte 2](#parte-2)
@@ -39,38 +44,30 @@
 13. [Agradecimentos](#agradecimentos)
 14. [Licença](#licença)
 
-## Por que isto existe
+## O que é isto
 
-Quando você conversa com um agente por muitos dias no mesmo chat, o histórico só cresce, e cada resposta precisa ler esse histórico de novo. Em planos com cota de uso, isso aparece como uma cota que acaba mais cedo. Há também um problema de qualidade: modelos com contextos longos tendem a usar melhor o começo e o fim do texto e pior o meio ([Liu et al., "Lost in the Middle", 2023](https://arxiv.org/abs/2307.03172)). E há um problema de controle: quando o chat fica grande demais, a plataforma resume sozinha o que veio antes, e você não escolhe o que entra no resumo.
+Chats longos com agentes de IA ficam mais lentos, mais caros e menos confiáveis à medida que crescem, e, quando ficam grandes demais, a plataforma resume por você, sem perguntar o que importa. Este tutorial mostra outro hábito: tratar o chat como um cache descartável e guardar o estado fora dele, numa **nota de estado** curta, que entra em todo chat novo, e num **registro** de itens de uma linha, cada um apontando para o trecho exato da conversa de onde saiu (`fonte: B07`). Na conversa testada, isso chegou a 26 e 25 acertos em 30 perguntas, contra 27 e 28 do chat inteiro, com cerca de um quinto dos tokens. Você monta tudo com alguns scripts pequenos em Python e pode medir nas suas próprias conversas.
 
-A tese deste tutorial é que o chat é um cache descartável e o estado mora fora. A crítica comum é que resumos perdem informação, e os testes concordam: uma nota de 250 palavras guardou de 28% a 40% do peso dos fatos, e sozinha a nota respondeu 12 de 30 perguntas. O que funcionou foi separar o estado em camadas e buscar só o necessário. Uma **nota de estado** curta sempre entra no chat novo. Um **registro do dia** com itens atômicos fica fora e é consultado por busca, e cada item aponta para o trecho bruto de onde saiu, como `fonte: B07`. É a mesma lógica de um grep por IDs de origem em código. Na conversa testada, esse método chegou a 26 e 25 acertos em 30 perguntas, contra 27 e 28 do chat inteiro, com cerca de um quinto dos tokens.
+## Começo rápido
 
-## O que você vai aprender
+Estes três passos não precisam de conta nem de chave. No Windows, use Git Bash ou WSL.
 
-Você vai aprender a cortar uma conversa em blocos com IDs estáveis, a escrever uma nota de estado curta com donos e condições, a montar um registro em que cada linha carrega o ID da sua origem e a guardar tudo no [Mem0](https://mem0.ai) com `"infer": false`, para que texto e IDs sobrevivam sem mudança. Também vai aprender a medir, na sua própria conversa, quanto cada camada realmente preserva, em vez de confiar nos números de alguém, inclusive nestes.
+1. **Instale o [Python](https://www.python.org/downloads/) 3.9+** e baixe este repositório (botão verde **Code** > **Download ZIP**, ou `git clone https://github.com/glaucia86/grok-bots-handoff-lab.git`).
+2. **Abra um terminal na pasta do repositório e rode o teste offline:** `python -m unittest discover -s tests`. Deve aparecer `OK`.
+3. **Corte a conversa de exemplo em blocos:** `cd scripts`, `mkdir -p ../saidas` e depois `python marcar_blocos.py --conversa ../exemplo/conversa-sintetica.md --saida ../saidas/blocos.md --mensagens 3`. Deve aparecer `12 mensagens -> 4 blocos em ../saidas/blocos.md`.
+
+Funcionou. Agora siga o [tutorial passo a passo](docs/pt-br/tutorial.md) para o resto: nota de estado, registro, Mem0 e medição.
 
 ## Como usar este tutorial
 
-Se você nunca programou, comece pelo **tutorial passo a passo**: ele cobre a instalação do Python, como abrir um terminal, como baixar o repositório e cada comando, com a saída esperada e uma seção de problemas comuns.
+Se você nunca programou, leia o **tutorial passo a passo** desde o começo: ele explica como instalar o Python, abrir um terminal e cada comando, com a saída esperada e uma seção de problemas comuns. Se você já programa, [Rodar localmente](#rodar-localmente) basta, e [Resultados](#resultados) resume o que foi medido. Todos os nomes em [exemplo/](exemplo) (Ana, Bruno, Loja Exemplo e outros) são fictícios.
 
 - 🇧🇷 [Tutorial passo a passo (Português)](docs/pt-br/tutorial.md) · [Metodologia](docs/pt-br/metodologia.md) · [Os 7 testes](docs/pt-br/testes.md)
 - 🇺🇸 [Step-by-step tutorial (English)](docs/en/tutorial.md) · [Methodology](docs/en/methodology.md) · [The 7 tests](docs/en/tests.md)
 
-Se você já programa, a próxima seção basta para rodar, e [Resultados](#resultados) resume o que foi medido.
+## Rodar localmente
 
-## Rodar localmente em cinco minutos
-
-Você precisa do [Python](https://www.python.org/downloads/) 3.9 ou mais novo; os scripts usam só a biblioteca padrão. No Windows, use Git Bash ou WSL, porque os comandos usam sintaxe Unix. No macOS e no Linux, use `python3` se `python` não funcionar. Primeiro, prove que tudo funciona **sem nenhuma chave**:
-
-```bash
-python -m unittest discover -s tests      # esperado: "Ran 4 tests ... OK"
-cd scripts
-mkdir -p ../saidas                        # saidas/ está no .gitignore
-python marcar_blocos.py --conversa ../exemplo/conversa-sintetica.md --saida ../saidas/blocos.md --mensagens 3
-# esperado: 12 mensagens -> 4 blocos em ../saidas/blocos.md
-```
-
-O caminho completo (nota de estado, registro, Mem0, medição) precisa de uma [chave da API da OpenAI](https://platform.openai.com/api-keys), lida **só** da variável de ambiente `OPENAI_API_KEY`. Nunca a escreva em arquivo.
+Depois do começo rápido, o caminho completo precisa de uma [chave da API da OpenAI](https://platform.openai.com/api-keys), lida **só** da variável de ambiente `OPENAI_API_KEY`. Nunca a escreva em arquivo. Da pasta `scripts`:
 
 ```bash
 export OPENAI_API_KEY="..."               # PowerShell: $env:OPENAI_API_KEY="..."
@@ -81,11 +78,11 @@ python gerar_registro.py --blocos ../saidas/blocos.md --saida ../saidas/registro
 
 Os passos 4.4 (Mem0), 4.5 (consulta no chat novo) e 4.6 (medição com a sua conversa, incluindo o custo em cota de cada etapa) estão no [tutorial](docs/pt-br/tutorial.md#passo-4-rodar-o-método).
 
-## A ideia em uma imagem
+## Como funciona
 
 ![Chat como cache, memória fora](diagramas/diagrama-1-cache-e-memoria.png)
 
-A pilha é pequena e cada peça é opcional, menos o formato. Os **blocos com ID** são a fonte bruta: a conversa cortada em trechos de poucas mensagens (nos testes, 3 mensagens e cerca de 1,7 KB cada), numerados B01, B02 e assim por diante. A **nota de estado**, de 60 a 90 linhas, é reescrita a cada atualização e responde onde estamos, o que foi decidido, o que está pendente com dono e condição, e qual é o próximo passo. O **registro do dia**, de 150 a 200 linhas, tem um item por linha, no formato `- tipo | texto | fonte: B07,B08`, e nunca é reescrito depois de gravado.
+A pilha é pequena e cada peça é opcional, menos o formato. Os **blocos com ID** são a fonte bruta: a conversa cortada em trechos de poucas mensagens (nos testes, 3 mensagens e cerca de 1,7 KB cada), numerados B01, B02 e assim por diante. A **nota de estado**, de 60 a 90 linhas, é reescrita a cada atualização e responde onde estamos, o que foi decidido, o que está pendente com dono e condição, e qual é o próximo passo. O **registro do dia**, de 150 a 200 linhas, tem um item por linha, no formato `- tipo | texto | fonte: B07,B08`, e nunca é reescrito depois de gravado. É a mesma lógica de um grep por IDs de origem em código, e, nesta conversa, um BM25 simples sobre os itens bastou.
 
 ![Registro com ID de origem](diagramas/diagrama-5-registro-com-id.png)
 
@@ -94,6 +91,13 @@ Para guardar as camadas fora da máquina, usamos o [Mem0](https://mem0.ai), semp
 ![Fluxo do handoff](diagramas/diagrama-2-fluxo-handoff.png)
 
 ## Resultados
+
+A versão curta: uma nota de 250 palavras sozinha guardou de 28% a 40% do peso dos fatos; a nota de 400 palavras usada nos testes de busca respondeu 12 de 30 perguntas. A nota de 400 palavras mais os itens do registro e os blocos de origem citados por eles (condição G) respondeu 26 e 25 de 30, a 1-3 acertos do chat inteiro, com cerca de 21-22% dos tokens. O Graphify como contexto e os IDs tipados gerados por modelo não ajudaram. As tabelas completas estão abaixo.
+
+![Como os testes foram montados](diagramas/diagrama-4-metodo.png)
+
+<details>
+<summary><strong>Mostrar todas as tabelas de resultados (testes 1 a 7)</strong></summary>
 
 Todos os números abaixo foram copiados dos testes de 11 e 12 de outubro de 2026. Legenda das tabelas: **Simples** é quantos dos 50 fatos do gabarito a nota preserva; **Ponderado** pondera pelo peso (3 críticos, 2, 1); **Peso 3** é quantos dos 9 fatos críticos foram preservados; **Juiz 2** é a contagem pelo segundo juiz, o gpt-6.1-sol, mais rigoroso; **Condições** é quantas das 5 condições de aprovação sobreviveram. Detalhes e limites de cada um em [docs/pt-br/testes.md](docs/pt-br/testes.md).
 
@@ -168,6 +172,8 @@ No teste 5, o Graphify com modelo, usado como contexto, acertou 11 e 13 de 30, c
 | T0c: nota de 400 + itens tipados | 18 / 16 | 1.078 | 22 / 21 | 1.212 |
 | Tc: + salto + blocos | 22 / 18 | 2.583 | 23 / 22 | 2.967 |
 
+</details>
+
 ## Limites
 
 Foi uma conversa de cerca de 11,8 mil tokens, uma rodada por condição, perguntas geradas por modelo a partir dos mesmos fatos que geraram o registro, e juízes automáticos sem revisão humana. Diferenças de 1 a 4 acertos podem ser ruído, inclusive a vantagem de G sobre o BM25. O gabarito foi extraído por um terceiro modelo e satura perto de 88%. Só 4 perguntas testam condições de aprovação. Os registros não foram conferidos contra alucinação, e a conferência dos IDs é aproximada. Não há medição de custo em dinheiro da operação diária. O Graphify foi testado só em chat; em repositórios de código ele provavelmente rende mais, mas isso é hipótese não testada. A condição C ("Busca por conceitos") não é reproduzível com os scripts deste repositório; os números dela são referência.
@@ -194,7 +200,8 @@ O teste mais importante que falta usa perguntas escritas à mão, sem olhar o ga
 README.md / README.pt-br.md   esta página, em inglês e em português
 docs/en/                      tutorial, metodologia e os 7 testes (inglês)
 docs/pt-br/                   o mesmo, em português
-diagramas/                    PNG, SVG e fontes Excalidraw
+diagramas/                    PNG, SVG e fontes Excalidraw (rótulos em português)
+diagramas/en/                 os mesmos diagramas com rótulos em inglês
 scripts/                      scripts em Python (só biblioteca padrão)
 tests/                        teste offline, sem chave de API
 exemplo/                      conversa SINTÉTICA, blocos, handoff de exemplo e modelo de handoff
@@ -204,22 +211,26 @@ Todos os nomes em [exemplo/](exemplo) (Ana, Bruno, Loja Exemplo e outros) são f
 
 ## Quem sou eu
 
-<!-- TODO(about-me): aguardando bio da Glaucia. Foto: editada com IA, recortada. -->
-<img src="assets/glaucia.jpg" alt="Foto de Glaucia Lemos (editada com IA)" title="Foto editada com IA" width="120" align="left">
+<div align="center">
+  <a href="https://github.com/glaucia86"><img src="assets/glaucia.jpg" width="140" alt="Glaucia Lemos (foto aprimorada com IA)" title="Glaucia Lemos (foto aprimorada com IA)" style="border-radius: 50%;"></a>
 
-**Glaucia Lemos**
+  <h3>Glaucia Lemos</h3>
+  <p><strong>Principal Software Engineer · Microsoft MVP · Codex Ambassador</strong></p>
+  <p>Trabalho com IA e engenharia de software, construindo <a href="https://github.com/glaucia86/repocheckai">aplicações</a> e explorando <a href="https://github.com/glaucia86/palestra-sdd">agentes de IA para código</a> com JavaScript e TypeScript. Ex-Microsoft, compartilho conhecimento prático em projetos open source, palestras e conteúdo técnico.</p>
 
-*TODO: mini bio, a ser enviada pela Glaucia.*
-
-<br clear="left">
-
-<p>
-  <a href="https://www.linkedin.com/in/glaucialemos"><img alt="LinkedIn" src="https://img.shields.io/badge/LinkedIn-glaucialemos-0A66C2?logo=linkedin&logoColor=white"></a>
-  <a href="https://x.com/glaucia_lemos86"><img alt="X" src="https://img.shields.io/badge/X-@glaucia__lemos86-000000?logo=x&logoColor=white"></a>
-  <a href="https://www.youtube.com/@GlauciaLemos"><img alt="YouTube" src="https://img.shields.io/badge/YouTube-@GlauciaLemos-FF0000?logo=youtube&logoColor=white"></a>
-  <a href="https://www.instagram.com/glaucia.lemos.dev"><img alt="Instagram" src="https://img.shields.io/badge/Instagram-glaucia.lemos.dev-E4405F?logo=instagram&logoColor=white"></a>
-  <a href="https://github.com/glaucia86"><img alt="GitHub" src="https://img.shields.io/badge/GitHub-glaucia86-181717?logo=github&logoColor=white"></a>
-</p>
+  <p>
+    <a href="https://www.linkedin.com/in/glaucialemos"><img alt="LinkedIn" src="https://img.shields.io/badge/LinkedIn-0A66C2?style=for-the-badge&logo=linkedin&logoColor=white"></a>
+    <a href="https://x.com/glaucia_lemos86"><img alt="X" src="https://img.shields.io/badge/X-000000?style=for-the-badge&logo=x&logoColor=white"></a>
+    <a href="https://www.youtube.com/@GlauciaLemos"><img alt="YouTube" src="https://img.shields.io/badge/YouTube-FF0000?style=for-the-badge&logo=youtube&logoColor=white"></a>
+    <a href="https://www.instagram.com/glaucia.lemos.dev"><img alt="Instagram" src="https://img.shields.io/badge/Instagram-E4405F?style=for-the-badge&logo=instagram&logoColor=white"></a>
+  </p>
+  <p>
+    <a href="https://github.com/glaucia86"><img alt="GitHub" src="https://img.shields.io/badge/GitHub-181717?style=for-the-badge&logo=github&logoColor=white"></a>
+    <a href="https://www.twitch.tv/glaucia_lemos86"><img alt="Twitch" src="https://img.shields.io/badge/Twitch-9146FF?style=for-the-badge&logo=twitch&logoColor=white"></a>
+    <a href="https://dev.to/glaucia86"><img alt="DEV Community" src="https://img.shields.io/badge/DEV_Community-0A0A0A?style=for-the-badge&logo=devdotto&logoColor=white"></a>
+  </p>
+  <p><a href="https://linktr.ee/glaucia_lemos86">Linktree</a></p>
+</div>
 
 ## Como contribuir
 

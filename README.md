@@ -1,3 +1,8 @@
+<!-- TODO(hero): assets/hero.png is an original illustration in progress (bots working as a team; no official Grok logo). -->
+<p align="center">
+  <img src="assets/hero.png" alt="A small team of AI bots passing a short handoff note to each other" width="720">
+</p>
+
 <h1 align="center">Memory Outside the Chat</h1>
 
 <p align="center">
@@ -18,17 +23,17 @@
   <a href="https://github.com/glaucia86/grok-bots-handoff-lab/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/glaucia86/grok-bots-handoff-lab/actions/workflows/ci.yml/badge.svg"></a>
 </p>
 
-> **Status: preliminary research tutorial.** The numbers come from a single real conversation of about 11.8k tokens, with one run per condition and automatic judges. Read them as preliminary evidence, not proof.
->
-> **Verification status.** The offline test and step 4.1 were executed and pass. Steps 4.1 to 4.6 were executed once with the synthetic conversation (step 4.4, Mem0, with a separate test `user_id`).
+> **Your AI chat does not need to remember everything. It needs to know where to look.**
+
+> **Status: draft.** The numbers come from a single real conversation of about 11.8k tokens, with one run per condition and automatic judges: preliminary evidence, not proof. Steps 4.1 to 4.6 were executed once with the synthetic conversation (step 4.4, Mem0, with a separate test `user_id`).
 
 ## Contents
 
-1. [Why this exists](#why-this-exists)
-2. [What you will learn](#what-you-will-learn)
+1. [What this is](#what-this-is)
+2. [Quick start](#quick-start)
 3. [How to use this tutorial](#how-to-use-this-tutorial)
-4. [Run locally in five minutes](#run-locally-in-five-minutes)
-5. [The idea in one picture](#the-idea-in-one-picture)
+4. [Run locally](#run-locally)
+5. [How it works](#how-it-works)
 6. [Results](#results)
 7. [Limits](#limits)
 8. [Part 2](#part-2)
@@ -39,38 +44,30 @@
 13. [Acknowledgements](#acknowledgements)
 14. [License](#license)
 
-## Why this exists
+## What this is
 
-When you work with an AI agent for days in the same chat, the history only grows, and every answer has to read it again. On plans with usage quotas, that shows up as quota running out sooner. There is also a quality problem: models with long contexts tend to use the beginning and the end of the text better than the middle ([Liu et al., "Lost in the Middle", 2023](https://arxiv.org/abs/2307.03172)). And there is a control problem: when the chat gets too big, the platform summarizes earlier turns on its own, and you do not choose what goes into that summary.
+Long chats with AI agents get slower, more expensive and less reliable as they grow, and when they get too big the platform summarizes them for you, without asking what matters. This tutorial shows a different habit: treat the chat as a disposable cache and keep the state outside it, in a short **state note** that goes into every new chat and a **registry** of one-line items, each pointing to the exact piece of conversation it came from (`fonte: B07`). In the tested conversation, that reached 26 and 25 correct answers out of 30, against 27 and 28 for the full chat, with about a fifth of the tokens. You will build it with a few small Python scripts, and you can measure it on your own conversations.
 
-The thesis of this tutorial is that the chat is a disposable cache and the state lives outside it. The usual objection is that summaries lose information, and the tests agree: a 250-word note kept 28% to 40% of the weight of the facts, and on its own it answered 12 of 30 questions. What worked was splitting the state into layers and retrieving only what is needed. A short **state note** always goes into the new chat. A **day registry** of atomic items stays outside and is queried by search, and every item points to the raw excerpt it came from, as in `fonte: B07`. It is the same logic as grepping by source IDs in code. In the tested conversation, this reached 26 and 25 correct answers out of 30, against 27 and 28 for the full chat, with about a fifth of the tokens.
+## Quick start
 
-## What you will learn
+No account and no API key needed for these three steps. On Windows, use Git Bash or WSL.
 
-You will learn to cut a conversation into blocks with stable IDs, to write a short state note with owners and conditions, to build a registry whose every line carries the ID of its source, and to store it in [Mem0](https://mem0.ai) with `"infer": false` so the text and IDs survive unchanged. You will also learn how to measure, on your own conversation, how much each layer actually preserves, instead of trusting anyone's numbers, including these.
+1. **Install [Python](https://www.python.org/downloads/) 3.9+** and download this repository (green **Code** button > **Download ZIP**, or `git clone https://github.com/glaucia86/grok-bots-handoff-lab.git`).
+2. **Open a terminal in the repository folder and run the offline test:** `python -m unittest discover -s tests`. You should see `OK`.
+3. **Cut the example conversation into blocks:** `cd scripts`, `mkdir -p ../saidas`, then `python marcar_blocos.py --conversa ../exemplo/conversa-sintetica.md --saida ../saidas/blocos.md --mensagens 3`. You should see `12 mensagens -> 4 blocos em ../saidas/blocos.md`.
+
+It works. Now follow the [step-by-step tutorial](docs/en/tutorial.md) for the rest: state note, registry, Mem0 and measurement.
 
 ## How to use this tutorial
 
-If you have never programmed, start with the **step-by-step tutorial**: it covers installing Python, opening a terminal, downloading the repository and every command, with the expected output and a troubleshooting section.
+If you have never programmed, read the **step-by-step tutorial** from the top: it explains installing Python, opening a terminal and every command, with the expected output and a troubleshooting section. If you already code, [Run locally](#run-locally) is enough, and [Results](#results) summarizes what was measured. The scripts, their messages and the example files are in Portuguese; that does not change how they run. Every name in [exemplo/](exemplo) (Ana, Bruno, Loja Exemplo and others) is fictional.
 
 - 🇺🇸 [Step-by-step tutorial (English)](docs/en/tutorial.md) · [Methodology](docs/en/methodology.md) · [The 7 tests](docs/en/tests.md)
 - 🇧🇷 [Tutorial passo a passo (Português)](docs/pt-br/tutorial.md) · [Metodologia](docs/pt-br/metodologia.md) · [Os 7 testes](docs/pt-br/testes.md)
 
-If you already code, the next section is enough to run it, and [Results](#results) summarizes what was measured. The scripts, their messages and the example files are in Portuguese; that does not change how they run.
+## Run locally
 
-## Run locally in five minutes
-
-You need [Python](https://www.python.org/downloads/) 3.9 or newer; the scripts use only the standard library. On Windows, use Git Bash or WSL, because the commands use Unix syntax. On macOS and Linux, use `python3` if `python` does not work. First, prove everything works **without any key**:
-
-```bash
-python -m unittest discover -s tests      # expected: "Ran 4 tests ... OK"
-cd scripts
-mkdir -p ../saidas                        # saidas/ is git-ignored
-python marcar_blocos.py --conversa ../exemplo/conversa-sintetica.md --saida ../saidas/blocos.md --mensagens 3
-# expected: 12 mensagens -> 4 blocos em ../saidas/blocos.md
-```
-
-The full path (state note, registry, Mem0, measurement) needs an [OpenAI API key](https://platform.openai.com/api-keys), read **only** from the `OPENAI_API_KEY` environment variable. Never write it in a file.
+After the quick start, the full path needs an [OpenAI API key](https://platform.openai.com/api-keys), read **only** from the `OPENAI_API_KEY` environment variable. Never write it in a file. From the `scripts` folder:
 
 ```bash
 export OPENAI_API_KEY="..."               # PowerShell: $env:OPENAI_API_KEY="..."
@@ -81,19 +78,26 @@ python gerar_registro.py --blocos ../saidas/blocos.md --saida ../saidas/registro
 
 Steps 4.4 (Mem0), 4.5 (querying in a new chat) and 4.6 (measuring with your own conversation, including the API cost of each step) are in the [tutorial](docs/en/tutorial.md#step-4-run-the-method).
 
-## The idea in one picture
+## How it works
 
-![The chat as a cache, memory outside](diagramas/diagrama-1-cache-e-memoria.png)
+![The chat as a cache, memory outside](diagramas/en/diagrama-1-cache-e-memoria.png)
 
-The stack is small, and every piece is optional except the format. **Blocks with IDs** are the raw source: the conversation cut into excerpts of a few messages (3 messages and about 1.7 KB each in the tests), numbered B01, B02 and so on. The **state note**, 60 to 90 lines, is rewritten at every update and answers where we are, what was decided, what is pending with owner and condition, and what comes next. The **day registry**, 150 to 200 lines, has one item per line in the format `- tipo | texto | fonte: B07,B08`, and is never rewritten once saved.
+The stack is small, and every piece is optional except the format. **Blocks with IDs** are the raw source: the conversation cut into excerpts of a few messages (3 messages and about 1.7 KB each in the tests), numbered B01, B02 and so on. The **state note**, 60 to 90 lines, is rewritten at every update and answers where we are, what was decided, what is pending with owner and condition, and what comes next. The **day registry**, 150 to 200 lines, has one item per line in the format `- tipo | texto | fonte: B07,B08`, and is never rewritten once saved. It is the same logic as grepping by source IDs in code, and in this conversation a simple BM25 over the items was enough.
 
-![Registry with source ID](diagramas/diagrama-5-registro-com-id.png)
+![Registry with source ID](diagramas/en/diagrama-5-registro-com-id.png)
 
 To keep the layers off your machine we use [Mem0](https://mem0.ai), always with `"infer": false`, so the text is stored without rewriting and the IDs survive. [Obsidian](https://obsidian.md) is optional, to view the notes as a graph. [Graphify](https://github.com/Graphify-Labs/graphify) was tested but is not part of the recipe for chats (see test 5).
 
-![Handoff flow](diagramas/diagrama-2-fluxo-handoff.png)
+![Handoff flow](diagramas/en/diagrama-2-fluxo-handoff.png)
 
 ## Results
+
+The short version: a 250-word note alone kept 28% to 40% of the weight of the facts; the 400-word note used in the retrieval tests answered 12 of 30 questions. The 400-word note plus registry items plus the source blocks they cite (condition G) answered 26 and 25 of 30, within 1-3 of the full chat, with about 21-22% of the tokens. Graphify as context and model-generated typed IDs did not help. The full tables are below.
+
+![How the tests were set up](diagramas/en/diagrama-4-metodo.png)
+
+<details>
+<summary><strong>Show all result tables (tests 1 to 7)</strong></summary>
 
 All numbers below were copied from the tests of October 11 and 12, 2026. Table legend: **Simple** is how many of the 50 answer-key facts the note preserves; **Weighted** weights them by importance (3 critical, 2, 1); **Weight 3** is how many of the 9 critical facts were preserved; **Judge 2** is the count by the second, stricter judge, gpt-6.1-sol; **Conditions** is how many of the 5 approval conditions survived. Details and limits of each test are in [docs/en/tests.md](docs/en/tests.md).
 
@@ -168,6 +172,8 @@ In test 5, Graphify with a model, used as context, got 11 and 13 of 30 right, ag
 | T0c: 400-word note + typed items | 18 / 16 | 1,078 | 22 / 21 | 1,212 |
 | Tc: + hop + blocks | 22 / 18 | 2,583 | 23 / 22 | 2,967 |
 
+</details>
+
 ## Limits
 
 It was one conversation of about 11.8k tokens, one run per condition, questions generated by a model from the same facts that generated the registry, and automatic judges with no human review. Differences of 1 to 4 correct answers may be noise, including G's advantage over BM25. The answer key was extracted by a third model and saturates near 88%. Only 4 questions test approval conditions. The registries were not checked for hallucination, and the ID check is approximate. There is no measurement of the money cost of daily operation. Graphify was tested only on chat; in code repositories it probably does better, but that is an untested hypothesis. Condition C ("concept search") is not reproducible with the scripts in this repository; its numbers are a reference.
@@ -194,7 +200,8 @@ The most important missing test uses questions written by hand, without looking 
 README.md / README.pt-br.md   this page, in English and Portuguese
 docs/en/                      tutorial, methodology and the 7 tests (English)
 docs/pt-br/                   the same, in Portuguese
-diagramas/                    PNG, SVG and Excalidraw sources
+diagramas/                    PNG, SVG and Excalidraw sources (Portuguese labels)
+diagramas/en/                 the same diagrams with English labels
 scripts/                      Python scripts (standard library only)
 tests/                        offline test, no API key needed
 exemplo/                      SYNTHETIC conversation, blocks, sample handoff and handoff template
@@ -204,22 +211,26 @@ Every name in [exemplo/](exemplo) (Ana, Bruno, Loja Exemplo and others) is ficti
 
 ## About me
 
-<!-- TODO(about-me): awaiting bio from Glaucia. Photo: AI-enhanced, cropped. -->
-<img src="assets/glaucia.jpg" alt="Photo of Glaucia Lemos (AI-enhanced)" title="AI-enhanced photo" width="120" align="left">
+<div align="center">
+  <a href="https://github.com/glaucia86"><img src="assets/glaucia.jpg" width="140" alt="Glaucia Lemos (AI-enhanced photo)" title="Glaucia Lemos (AI-enhanced photo)" style="border-radius: 50%;"></a>
 
-**Glaucia Lemos**
+  <h3>Glaucia Lemos</h3>
+  <p><strong>Principal Software Engineer · Microsoft MVP · Codex Ambassador</strong></p>
+  <p>I work with AI and software engineering, building <a href="https://github.com/glaucia86/repocheckai">applications</a> and exploring <a href="https://github.com/glaucia86/palestra-sdd">AI coding agents</a> with JavaScript and TypeScript. Formerly at Microsoft, I share practical knowledge through open-source projects, talks and technical content.</p>
 
-*TODO: short bio, to be provided by Glaucia.*
-
-<br clear="left">
-
-<p>
-  <a href="https://www.linkedin.com/in/glaucialemos"><img alt="LinkedIn" src="https://img.shields.io/badge/LinkedIn-glaucialemos-0A66C2?logo=linkedin&logoColor=white"></a>
-  <a href="https://x.com/glaucia_lemos86"><img alt="X" src="https://img.shields.io/badge/X-@glaucia__lemos86-000000?logo=x&logoColor=white"></a>
-  <a href="https://www.youtube.com/@GlauciaLemos"><img alt="YouTube" src="https://img.shields.io/badge/YouTube-@GlauciaLemos-FF0000?logo=youtube&logoColor=white"></a>
-  <a href="https://www.instagram.com/glaucia.lemos.dev"><img alt="Instagram" src="https://img.shields.io/badge/Instagram-glaucia.lemos.dev-E4405F?logo=instagram&logoColor=white"></a>
-  <a href="https://github.com/glaucia86"><img alt="GitHub" src="https://img.shields.io/badge/GitHub-glaucia86-181717?logo=github&logoColor=white"></a>
-</p>
+  <p>
+    <a href="https://www.linkedin.com/in/glaucialemos"><img alt="LinkedIn" src="https://img.shields.io/badge/LinkedIn-0A66C2?style=for-the-badge&logo=linkedin&logoColor=white"></a>
+    <a href="https://x.com/glaucia_lemos86"><img alt="X" src="https://img.shields.io/badge/X-000000?style=for-the-badge&logo=x&logoColor=white"></a>
+    <a href="https://www.youtube.com/@GlauciaLemos"><img alt="YouTube" src="https://img.shields.io/badge/YouTube-FF0000?style=for-the-badge&logo=youtube&logoColor=white"></a>
+    <a href="https://www.instagram.com/glaucia.lemos.dev"><img alt="Instagram" src="https://img.shields.io/badge/Instagram-E4405F?style=for-the-badge&logo=instagram&logoColor=white"></a>
+  </p>
+  <p>
+    <a href="https://github.com/glaucia86"><img alt="GitHub" src="https://img.shields.io/badge/GitHub-181717?style=for-the-badge&logo=github&logoColor=white"></a>
+    <a href="https://www.twitch.tv/glaucia_lemos86"><img alt="Twitch" src="https://img.shields.io/badge/Twitch-9146FF?style=for-the-badge&logo=twitch&logoColor=white"></a>
+    <a href="https://dev.to/glaucia86"><img alt="DEV Community" src="https://img.shields.io/badge/DEV_Community-0A0A0A?style=for-the-badge&logo=devdotto&logoColor=white"></a>
+  </p>
+  <p><a href="https://linktr.ee/glaucia_lemos86">Linktree</a></p>
+</div>
 
 ## Contributing
 
