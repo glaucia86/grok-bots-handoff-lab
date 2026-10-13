@@ -92,7 +92,7 @@ To keep the layers off your machine we use [Mem0](https://mem0.ai), always with 
 
 ## Results
 
-The short version: a 250-word note alone kept 28% to 40% of the weight of the facts and answered 12 of 30 questions; the note plus registry items plus the source blocks they cite (condition G) answered 26 and 25 of 30, within 1-3 of the full chat, with about 21-22% of the tokens. Graphify as context and model-generated typed IDs did not help. The full tables are below.
+The short version: a 250-word note alone kept 28% to 40% of the weight of the facts; the 400-word note used in the retrieval tests answered 12 of 30 questions. The 400-word note plus registry items plus the source blocks they cite (condition G) answered 26 and 25 of 30, within 1-3 of the full chat, with about 21-22% of the tokens. Graphify as context and model-generated typed IDs did not help. The full tables are below.
 
 ![How the tests were set up](diagramas/en/diagrama-4-metodo.png)
 
