@@ -41,6 +41,8 @@ jobs:
       - uses: actions/checkout@v4
       - uses: lycheeverse/lychee-action@v2
         with:
-          # TODO: drop 'assets/' once assets/hero.png exists, and the repo URL once it is public
-          args: --no-progress --include-fragments --exclude 'assets/' --exclude 'github.com/glaucia86/grok-bots-handoff-lab' './**/*.md'
+          # These exact account/profile pages return 403/429 to the unauthenticated CI checker.
+          # Keep all repository files, assets, fragments, and other external links checked.
+          args: --no-progress --include-fragments --exclude '^https://platform\.openai\.com/(api-keys)?$' --exclude '^https://x\.com/glaucia_lemos86/?$' --exclude '^https://www\.instagram\.com/glaucia\.lemos\.dev/?$' './**/*.md'
           fail: true
+
