@@ -246,7 +246,7 @@ Paste only the state note (`outputs/note.md`) into the new chat. When it is not 
 grep -A 20 "^## B02" ../outputs/blocks.md
 ```
 
-There is no standalone search command: the top-5 item search is done by `answer.py` in condition G0 (and G, which also brings the cited blocks). To see what it retrieves, run condition G0 in the next section and read the answers file.
+There is no standalone search command: the top-5 item search is done internally by `answer.py` in condition G0 (and G, which also brings the cited blocks). Its answers file contains generated answers and scores, not the retrieved items or context. For a manual handoff, inspect `../outputs/registry.md` from the `scripts` folder, copy the relevant items, and fetch the blocks named in their `fonte:` fields.
 
 **If it fails:** `grep` not recognized on Windows means you are in PowerShell: use Git Bash or WSL.
 
