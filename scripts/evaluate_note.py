@@ -1,13 +1,13 @@
 """Mede quanto de um gabarito uma nota (ou registro) preserva (testes 1 a 3).
 
 Uso:
-  python avaliar_nota.py --nota nota.md --gabarito gabarito.json [--juiz2 gpt-6.1-sol] [--saida resultado.json]
+  python evaluate_note.py --nota nota.md --gabarito gabarito.json [--juiz2 gpt-6.1-sol] [--saida resultado.json]
 
 Juiz principal: Decisions API (gpt-6-luna), predicado "a nota afirma ou implica claramente o fato", limiar 0,5.
 Juiz 2 (opcional): modelo em JSON, mais rigoroso, como contraprova.
 """
 import argparse, json
-from comum import predicado, chat, salvar_json
+from common import predicado, chat, salvar_json
 
 ap = argparse.ArgumentParser()
 ap.add_argument("--nota", required=True); ap.add_argument("--gabarito", required=True)

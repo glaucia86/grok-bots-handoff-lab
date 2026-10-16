@@ -1,13 +1,13 @@
 """Gera o registro do dia (camada 2) com o ID do bloco de origem em cada item (teste 6), e valida os IDs.
 
 Uso:
-  python gerar_registro.py --blocos blocos.md --saida registro.md --modelo gpt-6-luna [--linhas 150]
-  python gerar_registro.py --blocos blocos.md --validar registro.md     # só valida um registro já gerado
+  python generate_registry.py --blocos blocos.md --saida registro.md --modelo gpt-6-luna [--linhas 150]
+  python generate_registry.py --blocos blocos.md --validar registro.md     # só valida um registro já gerado
 
 Formato de cada linha:  - tipo | texto | fonte: B07,B08
 """
 import argparse, json, re, random
-from comum import chat, norm, ler_blocos, PARADAS
+from common import chat, norm, ler_blocos, PARADAS
 
 ap = argparse.ArgumentParser()
 ap.add_argument("--blocos", required=True); ap.add_argument("--saida"); ap.add_argument("--modelo")

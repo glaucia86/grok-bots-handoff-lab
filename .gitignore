@@ -1,6 +1,6 @@
 # Nunca versionar dados da sua conversa nem resultados brutos
-saidas/
+outputs/
 *.json
-!exemplo/*.json
+!examples/*.json
 .env
 __pycache__/

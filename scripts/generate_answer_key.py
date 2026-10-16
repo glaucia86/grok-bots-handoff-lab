@@ -1,12 +1,12 @@
 """Gera o gabarito de fatos atômicos com peso e condição (padrão: gpt-4.1, temperatura 0; configurável com --modelo).
 
 Uso:
-  python gerar_gabarito.py --conversa conversa.md --saida gabarito.json [--modelo gpt-4.1] [--max 50]
+  python generate_answer_key.py --conversa conversa.md --saida gabarito.json [--modelo gpt-4.1] [--max 50]
 
 ATENÇÃO: o gabarito contém fatos da SUA conversa. Não publique este arquivo.
 """
 import argparse, json
-from comum import chat, salvar_json
+from common import chat, salvar_json
 
 ap = argparse.ArgumentParser()
 ap.add_argument("--conversa", required=True); ap.add_argument("--saida", required=True)

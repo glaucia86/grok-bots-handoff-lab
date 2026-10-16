@@ -2,7 +2,7 @@
 
 > 🇺🇸 [English version](../en/methodology.md) · [Tutorial passo a passo](tutorial.md) · [README](../../README.pt-br.md)
 
-Este documento descreve como os testes foram montados e por que desse jeito. Os resultados de cada teste estão em [testes.md](testes.md).
+Este documento descreve como os testes foram montados e por que desse jeito. Os resultados de cada teste estão em [tests.md](tests.md).
 
 ## Base comum a todos os testes
 
@@ -18,9 +18,9 @@ O segundo juiz, o gpt-6.1-sol respondendo em JSON a lista de fatos presentes, ex
 
 ## Blocos, IDs e busca
 
-A conversa foi cortada em 24 blocos de cerca de 1,7 KB, com 3 mensagens cada, e cada bloco recebeu um ID estável de B01 a B24. Os IDs não têm significado; só precisam não mudar, porque tudo o que vem depois aponta para eles. No repositório, isso é o script `marcar_blocos.py`.
+A conversa foi cortada em 24 blocos de cerca de 1,7 KB, com 3 mensagens cada, e cada bloco recebeu um ID estável de B01 a B24. Os IDs não têm significado; só precisam não mudar, porque tudo o que vem depois aponta para eles. No repositório, isso é o script `mark_blocks.py`.
 
-A busca usada nas condições E, G0 e G é um BM25 clássico (k1 = 1,5 e b = 0,75), com normalização sem acentos e uma lista curta de palavras vazias em português. Na condição E, o BM25 roda sobre os blocos brutos e traz os 3 melhores. Nas condições G0 e G, roda sobre os itens do registro e traz os 5 melhores. Na condição G, os blocos citados nesses 5 itens são ordenados pela soma das pontuações dos itens que os citam, e os 3 primeiros entram no contexto. Sempre que blocos brutos entram, o texto é dividido dentro de um teto de cerca de 1.500 tokens (estimados em 3,6 caracteres por token), e, quando um bloco não cabe, ficam os parágrafos com mais termos da pergunta. No repositório, isso está em `comum.py` e `responder.py`.
+A busca usada nas condições E, G0 e G é um BM25 clássico (k1 = 1,5 e b = 0,75), com normalização sem acentos e uma lista curta de palavras vazias em português. Na condição E, o BM25 roda sobre os blocos brutos e traz os 3 melhores. Nas condições G0 e G, roda sobre os itens do registro e traz os 5 melhores. Na condição G, os blocos citados nesses 5 itens são ordenados pela soma das pontuações dos itens que os citam, e os 3 primeiros entram no contexto. Sempre que blocos brutos entram, o texto é dividido dentro de um teto de cerca de 1.500 tokens (estimados em 3,6 caracteres por token), e, quando um bloco não cabe, ficam os parágrafos com mais termos da pergunta. No repositório, isso está em `common.py` e `answer.py`.
 
 A busca por conceitos do teste 4 (condição C) usou a estrutura de páginas gerada pelo Graphify sem modelo, mais um script nosso de conceitos por palavra-chave. Ela não está incluída nesta versão do repositório, porque depende da estrutura gerada pelo Graphify; os números dela aparecem nas tabelas como referência.
 
@@ -34,4 +34,4 @@ Tudo foi feito numa rodada por condição, com uma única conversa de cerca de 1
 
 ## Dados que não estão neste repositório
 
-A conversa original, o gabarito, as perguntas geradas, as notas, os registros, os ledgers, os logs e os arquivos brutos de resultado ficaram de fora, porque contêm dados privados da conversa. As tabelas em [testes.md](testes.md) são os resultados agregados. Para rodar o método, use a sua própria conversa ou a conversa sintética em [exemplo/](../../exemplo).
+A conversa original, o gabarito, as perguntas geradas, as notas, os registros, os ledgers, os logs e os arquivos brutos de resultado ficaram de fora, porque contêm dados privados da conversa. As tabelas em [tests.md](tests.md) são os resultados agregados. Para rodar o método, use a sua própria conversa ou a conversa sintética em [examples/](../../examples).

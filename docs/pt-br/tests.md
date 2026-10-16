@@ -2,7 +2,7 @@
 
 > 🇺🇸 [English version](../en/tests.md) · [Tutorial passo a passo](tutorial.md) · [README](../../README.pt-br.md)
 
-Este documento reúne os sete testes, na ordem em que foram feitos. Cada um traz a pergunta, a montagem, o resultado e os limites. Os números foram copiados dos resultados medidos, sem arredondamento novo. A metodologia comum está em [metodologia.md](metodologia.md). Resultados negativos ficam tão detalhados quanto os positivos, porque o objetivo é não deixar dúvida sobre o que foi medido e o que ainda é hipótese.
+Este documento reúne os sete testes, na ordem em que foram feitos. Cada um traz a pergunta, a montagem, o resultado e os limites. Os números foram copiados dos resultados medidos, sem arredondamento novo. A metodologia comum está em [methodology.md](methodology.md). Resultados negativos ficam tão detalhados quanto os positivos, porque o objetivo é não deixar dúvida sobre o que foi medido e o que ainda é hipótese.
 
 Os scripts deste repositório reproduzem os testes 1 a 4 e 6 (ver [scripts/](../../scripts)). Os testes 5 (Graphify) e 7 (IDs tipados) estão descritos aqui, mas os scripts deles não foram incluídos nesta versão.
 

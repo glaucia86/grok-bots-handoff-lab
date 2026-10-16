@@ -2,7 +2,7 @@
 """Exporta as notas gravadas no Mem0 para arquivos .md numa pasta do Obsidian (opcional).
 
 Uso:
-  python exportar_mem0.py --pasta ./Handoffs [--user-id handoffs] [--conceitos Mem0,Handoff,Registro,Obsidian]
+  python export_mem0.py --pasta ./Handoffs [--user-id handoffs] [--conceitos Mem0,Handoff,Registro,Obsidian]
 
 A chave do Mem0 vem SOMENTE da variável de ambiente MEM0_API_KEY; nunca escreva a chave no arquivo.
 Só exporta do Mem0 para a pasta; editar no Obsidian não altera o Mem0.
