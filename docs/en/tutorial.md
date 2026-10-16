@@ -27,7 +27,7 @@ This tutorial assumes you have never programmed. Every step says what to type, w
 
 A long chat with an AI agent gets slower, more expensive and less reliable as it grows. Instead of keeping everything in the chat, you will keep the state outside it in two layers: a short **state note** that you paste into every new chat, and a **day registry** of one-line items, each pointing to the ID of the conversation excerpt it came from (for example `fonte: B07`). The registry is only queried by search, so the new chat stays small. The scripts are written in Python with only the standard library, so there is nothing extra to install.
 
-The example conversation in [exemplo/](../../exemplo) is **synthetic**: every name in it (Ana, Bruno, Loja Exemplo and anyone else) is fictional, and no real data is involved. The scripts, their messages and the example files are in Portuguese; that does not affect how they run.
+The example conversation in [examples/](../../examples) is **synthetic**: every name in it (Ana, Bruno, Loja Exemplo and anyone else) is fictional, and no real data is involved. The scripts, their messages and the example files are in Portuguese; that does not affect how they run.
 
 ## Step 0: install Python
 
@@ -56,7 +56,7 @@ Choose one:
 1. **Without Git (easiest):** on the repository's GitHub page, click the green **Code** button, then **Download ZIP**. Unzip it and remember where the folder is.
 2. **With Git:** `git clone <repository URL>` (the URL is in the same **Code** button).
 
-Then, in the terminal, go into the folder with `cd` followed by its path. A trick: type `cd ` (with a space) and drag the folder into the terminal window. Check you are in the right place by listing the files (`ls`, or `dir` in PowerShell): you should see `README.md`, `scripts`, `tests` and `exemplo`.
+Then, in the terminal, go into the folder with `cd` followed by its path. A trick: type `cd ` (with a space) and drag the folder into the terminal window. Check you are in the right place by listing the files (`ls`, or `dir` in PowerShell): you should see `README.md`, `scripts`, `tests` and `examples`.
 
 ## Step 3: run the offline test (no key needed)
 
@@ -80,11 +80,11 @@ If you see `OK`, your Python and the scripts are working.
 
 ## Step 4: run the method
 
-All commands below are run from inside the `scripts` folder, and results go to a `saidas` folder that Git ignores (so you never commit them by accident):
+All commands below are run from inside the `scripts` folder, and results go to a `outputs` folder that Git ignores (so you never commit them by accident):
 
 ```bash
 cd scripts
-mkdir -p ../saidas
+mkdir -p ../outputs
 ```
 
 The default models are the ones used in the tests (gpt-6-luna and gpt-6.1-sol). The answer key in step 4.6 uses gpt-4.1 by default, a third model separate from those that answer. You can change any of them with `--modelo`.
@@ -112,32 +112,32 @@ The variable lasts until you close the terminal; in a new terminal, set it again
 This cuts the conversation into blocks of a few messages and numbers them B01, B02 and so on. It runs offline. To use your own conversation later, export it as text with each message in its own paragraph starting with `[`.
 
 ```bash
-python marcar_blocos.py --conversa ../exemplo/conversa-sintetica.md --saida ../saidas/blocos.md --mensagens 3
+python mark_blocks.py --conversa ../examples/synthetic-conversation.md --saida ../outputs/blocos.md --mensagens 3
 ```
 
 Expected output with the synthetic conversation:
 
 ```
-12 mensagens -> 4 blocos em ../saidas/blocos.md
+12 mensagens -> 4 blocos em ../outputs/blocos.md
 ```
 
-("12 messages -> 4 blocks"). Open `saidas/blocos.md` in any text editor and you will see headings `## B01` to `## B04`.
+("12 messages -> 4 blocks"). Open `outputs/blocos.md` in any text editor and you will see headings `## B01` to `## B04`.
 
 ### 4.2 Write the state note
 
 ```bash
-python gerar_nota.py --conversa ../exemplo/conversa-sintetica.md --saida ../saidas/nota.md \
+python generate_note.py --conversa ../examples/synthetic-conversation.md --saida ../outputs/nota.md \
     --modelo gpt-6-luna --palavras 400 --formato refinado --modo unica
 ```
 
 `--formato refinado` asks for an owner and a condition on each pending item and for a pointers section; `--formato livre` is the free-form note of test 1. `--modo unica` writes it in a single pass (`cadeia` is the chained variant); in the tests, a single pass was equal or better.
 
-**Expected output (approximate, varies per run):** a note of about 256 words in `saidas/nota.md`.
+**Expected output (approximate, varies per run):** a note of about 256 words in `outputs/nota.md`.
 
 ### 4.3 Write the day registry, with source IDs
 
 ```bash
-python gerar_registro.py --blocos ../saidas/blocos.md --saida ../saidas/registro.md --modelo gpt-6-luna --linhas 150
+python generate_registry.py --blocos ../outputs/blocos.md --saida ../outputs/registro.md --modelo gpt-6-luna --linhas 150
 ```
 
 Each line looks like `- tipo | texto | fonte: B02`. The script validates the result: it checks that the cited IDs exist and that the cited block contains at least half of the item's keywords. This check is approximate, so read a sample yourself. In the tests, going past 200 lines added almost nothing.
@@ -178,53 +178,53 @@ We ran this check with a separate test `user_id`, so the example item did not mi
 Optionally, export the notes to an [Obsidian](https://obsidian.md) folder, with `[[concept]]` links for its graph view:
 
 ```bash
-python exportar_mem0.py --pasta ./Handoffs
+python export_mem0.py --pasta ./Handoffs
 ```
 
 Other options: `--user-id` (default `handoffs`), `--consulta` (default `handoff`) and `--conceitos` (default `Mem0,Handoff,Registro,Obsidian`).
 
 ### 4.5 Query in a new chat
 
-Paste only the state note (`saidas/nota.md`) into the new chat. When it is not enough, find the 5 most similar registry items and, if you need the detail, bring the raw text of the cited blocks by their IDs:
+Paste only the state note (`outputs/nota.md`) into the new chat. When it is not enough, find the 5 most similar registry items and, if you need the detail, bring the raw text of the cited blocks by their IDs:
 
 ```bash
-grep -A 20 "^## B02" ../saidas/blocos.md
+grep -A 20 "^## B02" ../outputs/blocos.md
 ```
 
-There is no standalone search command: the top-5 item search is done by `responder.py` in condition G0 (and G, which also brings the cited blocks). To see what it retrieves, run condition G0 in step 4.6 and read the answers file.
+There is no standalone search command: the top-5 item search is done by `answer.py` in condition G0 (and G, which also brings the cited blocks). To see what it retrieves, run condition G0 in step 4.6 and read the answers file.
 
 ### 4.6 Measure with your own conversation
 
 To repeat the measurement, generate an answer key and questions, evaluate the note and run the search conditions. Replace `minha-conversa.md` with the path to your exported conversation, and use the note and registry generated from **that same** conversation. These files contain your conversation data: never publish them.
 
 ```bash
-python gerar_gabarito.py  --conversa minha-conversa.md --saida ../saidas/gabarito.json
-python gerar_perguntas.py --gabarito ../saidas/gabarito.json --saida ../saidas/perguntas.json
-python avaliar_nota.py    --nota ../saidas/nota.md --gabarito ../saidas/gabarito.json --juiz2 gpt-6.1-sol
-python responder.py --blocos ../saidas/blocos.md --nota ../saidas/nota.md --registro ../saidas/registro.md \
-    --perguntas ../saidas/perguntas.json --modelo gpt-6-luna --condicoes A,B,E,G0,G --saida ../saidas/respostas.json
+python generate_answer_key.py  --conversa minha-conversa.md --saida ../outputs/gabarito.json
+python generate_questions.py --gabarito ../outputs/gabarito.json --saida ../outputs/perguntas.json
+python evaluate_note.py    --nota ../outputs/nota.md --gabarito ../outputs/gabarito.json --juiz2 gpt-6.1-sol
+python answer.py --blocos ../outputs/blocos.md --nota ../outputs/nota.md --registro ../outputs/registro.md \
+    --perguntas ../outputs/perguntas.json --modelo gpt-6-luna --condicoes A,B,E,G0,G --saida ../outputs/respostas.json
 ```
 
-**Cost.** Every step calls the API. The answer key and the questions are one call each; `avaliar_nota.py` calls the judge (Decisions API, gpt-6-luna) and, with `--juiz2`, also gpt-6.1-sol; `responder.py` makes one answer and one judge call per question and condition, so 30 questions × 5 conditions = 150 answers plus 150 judgments. If one call fails, the rest continue and the failure is marked `ok: null`.
+**Cost.** Every step calls the API. The answer key and the questions are one call each; `evaluate_note.py` calls the judge (Decisions API, gpt-6-luna) and, with `--juiz2`, also gpt-6.1-sol; `answer.py` makes one answer and one judge call per question and condition, so 30 questions × 5 conditions = 150 answers plus 150 judgments. If one call fails, the rest continue and the failure is marked `ok: null`.
 
 Condition C ("concept search", tests 4 and 6) is not in the scripts: it depended on the structure generated by Graphify and on scripts of ours that are not included. Its numbers in the tables are a reference only (see [methodology.md](methodology.md)).
 
 <a id="synthetic-warning"></a>
 The synthetic conversation is far too short to measure anything; it only shows the format and lets you test the commands. The result that matters is the one you measure on your own conversation.
 
-**Expected output (approximate, varies per run)**, running these commands with `--conversa ../exemplo/conversa-sintetica.md`: an answer key of 16 facts (6 of weight 3, 8 of weight 2, 2 of weight 1) and 16 questions; `avaliar_nota.py` reports 16/16 with both judges; `responder.py` reports 16/16 in each condition, with average input tokens per question of 427 (A), 450 (B), 744 (E), 590 (G0) and 862 (G). The 100% is expected and means nothing: as the [warning above](#synthetic-warning) says, the synthetic conversation is far too short to measure anything.
+**Expected output (approximate, varies per run)**, running these commands with `--conversa ../examples/synthetic-conversation.md`: an answer key of 16 facts (6 of weight 3, 8 of weight 2, 2 of weight 1) and 16 questions; `evaluate_note.py` reports 16/16 with both judges; `answer.py` reports 16/16 in each condition, with average input tokens per question of 427 (A), 450 (B), 744 (E), 590 (G0) and 862 (G). The 100% is expected and means nothing: as the [warning above](#synthetic-warning) says, the synthetic conversation is far too short to measure anything.
 
 ## Troubleshooting
 
 **`python: command not found` or `'python' is not recognized`.** On macOS/Linux, use `python3`. On Windows, reinstall Python and tick "Add python.exe to PATH", then open a new terminal.
 
-**`can't open file ... marcar_blocos.py`.** You are not inside the `scripts` folder. Run `cd scripts` from the repository folder.
+**`can't open file ... mark_blocks.py`.** You are not inside the `scripts` folder. Run `cd scripts` from the repository folder.
 
 **`Defina a variável de ambiente OPENAI_API_KEY antes de rodar.`** ("Set the OPENAI_API_KEY environment variable before running.") The key is not set in this terminal. Set it as shown in [Create your OpenAI API key](#create-your-openai-api-key); it disappears when the terminal closes.
 
 **`Erro 401: a chave em OPENAI_API_KEY é inválida, expirou ou não tem acesso.`** (or `Erro 403`). The key is wrong, revoked or has no access to the model. Create a new one on the [API keys page](https://platform.openai.com/api-keys), check that you copied it whole and without extra spaces, and confirm billing is active. The script stops immediately in this case and does not retry.
 
-**`Erro 429` or rate-limit messages.** You hit a rate limit or ran out of quota. The scripts retry 429 and 5xx errors automatically a few times; if it still fails, wait a few minutes, lower parallelism with `responder.py --paralelo 2` (default 8), or check your quota and billing.
+**`Erro 429` or rate-limit messages.** You hit a rate limit or ran out of quota. The scripts retry 429 and 5xx errors automatically a few times; if it still fails, wait a few minutes, lower parallelism with `answer.py --paralelo 2` (default 8), or check your quota and billing.
 
 **`Defina MEM0_API_KEY no ambiente.`** Same as above, for the Mem0 key.
 

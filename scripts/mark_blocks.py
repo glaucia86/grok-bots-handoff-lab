@@ -1,7 +1,7 @@
 """Passo 1: corta a conversa em blocos com ID estável (B01, B02, ...).
 
 Uso:
-  python marcar_blocos.py --conversa conversa.md --saida blocos.md [--mensagens 3]
+  python mark_blocks.py --conversa conversa.md --saida blocos.md [--mensagens 3]
 
 A conversa deve ter uma mensagem por parágrafo começando com '[' (ex.: '[Ana] texto' ou '[1] Ana: texto').
 Ajuste --separador se o seu export usar outro marcador.

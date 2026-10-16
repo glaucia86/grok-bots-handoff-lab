@@ -22,7 +22,7 @@ It must end with `OK`. The CI runs the same test, compiles every script and chec
 
 **Never commit keys.** Keys are read only from the `OPENAI_API_KEY` and `MEM0_API_KEY` environment variables. Do not put them in code, in `.env` files, in screenshots or in issue text.
 
-**Never commit real conversation data.** Answer keys, questions, notes, registries and answers generated from a real conversation contain that conversation. Keep them in `saidas/`, which is git-ignored. Examples must be synthetic, with clearly fictional names, like the files in [exemplo/](exemplo).
+**Never commit real conversation data.** Answer keys, questions, notes, registries and answers generated from a real conversation contain that conversation. Keep them in `outputs/`, which is git-ignored. Examples must be synthetic, with clearly fictional names, like the files in [examples/](examples).
 
 **Keep numbers sourced.** The tables in this repository were copied from measured results and must not change without a new measurement. A new number needs its source: which script, which model, which conversation size, how many runs and the date. Preliminary results stay labeled as preliminary.
 

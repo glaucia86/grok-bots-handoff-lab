@@ -8,7 +8,7 @@ Condições:
   G   G0 + texto bruto de até 3 blocos citados nesses itens (teto ~1.500 tokens)
 
 Uso:
-  python responder.py --blocos blocos.md --nota nota.md --registro registro.md --perguntas perguntas.json \
+  python answer.py --blocos blocos.md --nota nota.md --registro registro.md --perguntas perguntas.json \
       --modelo gpt-6-luna --condicoes A,B,E,G0,G --saida respostas.json
 
 Os tokens de entrada vêm do campo usage da API (média por pergunta).
@@ -16,7 +16,7 @@ ATENÇÃO: o arquivo de respostas contém trechos da sua conversa. Não publique
 """
 import argparse, collections, json, re
 from concurrent.futures import ThreadPoolExecutor
-from comum import chat, predicado, ler_blocos, BM25, montar_blocos, salvar_json
+from common import chat, predicado, ler_blocos, BM25, montar_blocos, salvar_json
 
 ap = argparse.ArgumentParser()
 for x in ("blocos", "nota", "perguntas", "modelo", "saida"):

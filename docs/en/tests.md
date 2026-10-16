@@ -1,6 +1,6 @@
 # The 7 tests of Oct 11-12, 2026
 
-> 🇧🇷 [Versão em português](../pt-br/testes.md) · [Step-by-step tutorial](tutorial.md) · [README](../../README.md)
+> 🇧🇷 [Versão em português](../pt-br/tests.md) · [Step-by-step tutorial](tutorial.md) · [README](../../README.md)
 
 This document collects the seven tests in the order they were run. Each one has the question, the setup, the result and the limits. The numbers were copied from the measured results, with no new rounding (only the decimal and thousands separators follow English convention). The shared methodology is in [methodology.md](methodology.md). Negative results are as detailed as positive ones, because the goal is to leave no doubt about what was measured and what is still a hypothesis.
 

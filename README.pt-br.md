@@ -54,15 +54,15 @@ Estes três passos não precisam de conta nem de chave. No Windows, use Git Bash
 
 1. **Instale o [Python](https://www.python.org/downloads/) 3.9+** e baixe este repositório (botão verde **Code** > **Download ZIP**, ou `git clone https://github.com/glaucia86/grok-bots-handoff-lab.git`).
 2. **Abra um terminal na pasta do repositório e rode o teste offline:** `python -m unittest discover -s tests`. Deve aparecer `OK`.
-3. **Corte a conversa de exemplo em blocos:** `cd scripts`, `mkdir -p ../saidas` e depois `python marcar_blocos.py --conversa ../exemplo/conversa-sintetica.md --saida ../saidas/blocos.md --mensagens 3`. Deve aparecer `12 mensagens -> 4 blocos em ../saidas/blocos.md`.
+3. **Corte a conversa de exemplo em blocos:** `cd scripts`, `mkdir -p ../outputs` e depois `python mark_blocks.py --conversa ../examples/synthetic-conversation.md --saida ../outputs/blocos.md --mensagens 3`. Deve aparecer `12 mensagens -> 4 blocos em ../outputs/blocos.md`.
 
 Funcionou. Agora siga o [tutorial passo a passo](docs/pt-br/tutorial.md) para o resto: nota de estado, registro, Mem0 e medição.
 
 ## Como usar este tutorial
 
-Se você nunca programou, leia o **tutorial passo a passo** desde o começo: ele explica como instalar o Python, abrir um terminal e cada comando, com a saída esperada e uma seção de problemas comuns. Se você já programa, [Rodar localmente](#rodar-localmente) basta, e [Resultados](#resultados) resume o que foi medido. Todos os nomes em [exemplo/](exemplo) (Ana, Bruno, Loja Exemplo e outros) são fictícios.
+Se você nunca programou, leia o **tutorial passo a passo** desde o começo: ele explica como instalar o Python, abrir um terminal e cada comando, com a saída esperada e uma seção de problemas comuns. Se você já programa, [Rodar localmente](#rodar-localmente) basta, e [Resultados](#resultados) resume o que foi medido. Todos os nomes em [examples/](examples) (Ana, Bruno, Loja Exemplo e outros) são fictícios.
 
-- 🇧🇷 [Tutorial passo a passo (Português)](docs/pt-br/tutorial.md) · [Metodologia](docs/pt-br/metodologia.md) · [Os 7 testes](docs/pt-br/testes.md)
+- 🇧🇷 [Tutorial passo a passo (Português)](docs/pt-br/tutorial.md) · [Metodologia](docs/pt-br/methodology.md) · [Os 7 testes](docs/pt-br/tests.md)
 - 🇺🇸 [Step-by-step tutorial (English)](docs/en/tutorial.md) · [Methodology](docs/en/methodology.md) · [The 7 tests](docs/en/tests.md)
 
 ## Rodar localmente
@@ -71,35 +71,35 @@ Depois do começo rápido, o caminho completo precisa de uma [chave da API da Op
 
 ```bash
 export OPENAI_API_KEY="..."               # PowerShell: $env:OPENAI_API_KEY="..."
-python gerar_nota.py --conversa ../exemplo/conversa-sintetica.md --saida ../saidas/nota.md \
+python generate_note.py --conversa ../examples/synthetic-conversation.md --saida ../outputs/nota.md \
     --modelo gpt-6-luna --palavras 400 --formato refinado --modo unica
-python gerar_registro.py --blocos ../saidas/blocos.md --saida ../saidas/registro.md --modelo gpt-6-luna --linhas 150
+python generate_registry.py --blocos ../outputs/blocos.md --saida ../outputs/registro.md --modelo gpt-6-luna --linhas 150
 ```
 
 Os passos 4.4 (Mem0), 4.5 (consulta no chat novo) e 4.6 (medição com a sua conversa, incluindo o custo em cota de cada etapa) estão no [tutorial](docs/pt-br/tutorial.md#passo-4-rodar-o-método).
 
 ## Como funciona
 
-![Chat como cache, memória fora](diagramas/diagrama-1-cache-e-memoria.png)
+![Chat como cache, memória fora](diagrams/diagram-1-cache-and-memory.png)
 
 A pilha é pequena e cada peça é opcional, menos o formato. Os **blocos com ID** são a fonte bruta: a conversa cortada em trechos de poucas mensagens (nos testes, 3 mensagens e cerca de 1,7 KB cada), numerados B01, B02 e assim por diante. A **nota de estado**, de 60 a 90 linhas, é reescrita a cada atualização e responde onde estamos, o que foi decidido, o que está pendente com dono e condição, e qual é o próximo passo. O **registro do dia**, de 150 a 200 linhas, tem um item por linha, no formato `- tipo | texto | fonte: B07,B08`, e nunca é reescrito depois de gravado. É a mesma lógica de um grep por IDs de origem em código, e, nesta conversa, um BM25 simples sobre os itens bastou.
 
-![Registro com ID de origem](diagramas/diagrama-5-registro-com-id.png)
+![Registro com ID de origem](diagrams/diagram-5-registry-with-id.png)
 
 Para guardar as camadas fora da máquina, usamos o [Mem0](https://mem0.ai), sempre com `"infer": false`, para que o texto seja guardado sem reescrita e os IDs sobrevivam. Para visualizar as notas como grafo, o [Obsidian](https://obsidian.md) é opcional. O [Graphify](https://github.com/Graphify-Labs/graphify) foi testado, mas não faz parte da receita para chats (ver o teste 5).
 
-![Fluxo do handoff](diagramas/diagrama-2-fluxo-handoff.png)
+![Fluxo do handoff](diagrams/diagram-2-handoff-flow.png)
 
 ## Resultados
 
 A versão curta: uma nota de 250 palavras sozinha guardou de 28% a 40% do peso dos fatos; a nota de 400 palavras usada nos testes de busca respondeu 12 de 30 perguntas. A nota de 400 palavras mais os itens do registro e os blocos de origem citados por eles (condição G) respondeu 26 e 25 de 30, a 1-3 acertos do chat inteiro, com cerca de 21-22% dos tokens. O Graphify como contexto e os IDs tipados gerados por modelo não ajudaram. As tabelas completas estão abaixo.
 
-![Como os testes foram montados](diagramas/diagrama-4-metodo.png)
+![Como os testes foram montados](diagrams/diagram-4-method.png)
 
 <details>
 <summary><strong>Mostrar todas as tabelas de resultados (testes 1 a 7)</strong></summary>
 
-Todos os números abaixo foram copiados dos testes de 11 e 12 de outubro de 2026. Legenda das tabelas: **Simples** é quantos dos 50 fatos do gabarito a nota preserva; **Ponderado** pondera pelo peso (3 críticos, 2, 1); **Peso 3** é quantos dos 9 fatos críticos foram preservados; **Juiz 2** é a contagem pelo segundo juiz, o gpt-6.1-sol, mais rigoroso; **Condições** é quantas das 5 condições de aprovação sobreviveram. Detalhes e limites de cada um em [docs/pt-br/testes.md](docs/pt-br/testes.md).
+Todos os números abaixo foram copiados dos testes de 11 e 12 de outubro de 2026. Legenda das tabelas: **Simples** é quantos dos 50 fatos do gabarito a nota preserva; **Ponderado** pondera pelo peso (3 críticos, 2, 1); **Peso 3** é quantos dos 9 fatos críticos foram preservados; **Juiz 2** é a contagem pelo segundo juiz, o gpt-6.1-sol, mais rigoroso; **Condições** é quantas das 5 condições de aprovação sobreviveram. Detalhes e limites de cada um em [docs/pt-br/tests.md](docs/pt-br/tests.md).
 
 ### Quanto uma nota preserva (testes 1 e 2)
 
@@ -200,14 +200,14 @@ O teste mais importante que falta usa perguntas escritas à mão, sem olhar o ga
 README.md / README.pt-br.md   esta página, em inglês e em português
 docs/en/                      tutorial, metodologia e os 7 testes (inglês)
 docs/pt-br/                   o mesmo, em português
-diagramas/                    PNG, SVG e fontes Excalidraw (rótulos em português)
-diagramas/en/                 os mesmos diagramas com rótulos em inglês
+diagrams/                    PNG, SVG e fontes Excalidraw (rótulos em português)
+diagrams/en/                 os mesmos diagramas com rótulos em inglês
 scripts/                      scripts em Python (só biblioteca padrão)
 tests/                        teste offline, sem chave de API
-exemplo/                      conversa SINTÉTICA, blocos, handoff de exemplo e modelo de handoff
+examples/                      conversa SINTÉTICA, blocos, handoff de exemplo e modelo de handoff
 ```
 
-Todos os nomes em [exemplo/](exemplo) (Ana, Bruno, Loja Exemplo e outros) são fictícios.
+Todos os nomes em [examples/](examples) (Ana, Bruno, Loja Exemplo e outros) são fictícios.
 
 ## Quem sou eu
 

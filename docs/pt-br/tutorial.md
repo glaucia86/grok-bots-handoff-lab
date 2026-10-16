@@ -1,6 +1,6 @@
 # Tutorial passo a passo: memória fora do chat
 
-> 🇺🇸 [English version](../en/tutorial.md) · [README](../../README.pt-br.md) · [Metodologia](metodologia.md) · [Os 7 testes](testes.md)
+> 🇺🇸 [English version](../en/tutorial.md) · [README](../../README.pt-br.md) · [Metodologia](methodology.md) · [Os 7 testes](tests.md)
 
 Este tutorial parte do princípio de que você nunca programou. Cada passo diz o que digitar, onde digitar e o que deve aparecer. Se algo sair diferente na sua tela, vá até [Problemas comuns](#problemas-comuns) antes de desistir: quase todo erro aqui tem solução em uma linha.
 
@@ -27,7 +27,7 @@ Este tutorial parte do princípio de que você nunca programou. Cada passo diz o
 
 Um chat longo com um agente de IA fica mais lento, mais caro e menos confiável à medida que cresce. Em vez de manter tudo no chat, você vai guardar o estado fora dele, em duas camadas: uma **nota de estado** curta, que você cola em todo chat novo, e um **registro do dia** com itens de uma linha, cada um apontando para o ID do trecho da conversa de onde saiu (por exemplo, `fonte: B07`). O registro só é consultado por busca, então o chat novo continua pequeno. Os scripts são em Python e usam só a biblioteca padrão, então não há nada extra para instalar.
 
-A conversa de exemplo em [exemplo/](../../exemplo) é **sintética**: todos os nomes que aparecem nela (Ana, Bruno, Loja Exemplo e qualquer outro) são fictícios, e não há nenhum dado real.
+A conversa de exemplo em [examples/](../../examples) é **sintética**: todos os nomes que aparecem nela (Ana, Bruno, Loja Exemplo e qualquer outro) são fictícios, e não há nenhum dado real.
 
 ## Passo 0: instalar o Python
 
@@ -56,7 +56,7 @@ Escolha um caminho:
 1. **Sem Git (mais fácil):** na página do repositório no GitHub, clique no botão verde **Code** e depois em **Download ZIP**. Descompacte e lembre onde a pasta ficou.
 2. **Com Git:** `git clone <URL do repositório>` (a URL está no mesmo botão **Code**).
 
-Depois, no terminal, entre na pasta com `cd` seguido do caminho dela. Um truque: digite `cd ` (com espaço) e arraste a pasta para a janela do terminal. Confira se está no lugar certo listando os arquivos (`ls`, ou `dir` no PowerShell): devem aparecer `README.md`, `scripts`, `tests` e `exemplo`.
+Depois, no terminal, entre na pasta com `cd` seguido do caminho dela. Um truque: digite `cd ` (com espaço) e arraste a pasta para a janela do terminal. Confira se está no lugar certo listando os arquivos (`ls`, ou `dir` no PowerShell): devem aparecer `README.md`, `scripts`, `tests` e `examples`.
 
 ## Passo 3: rodar o teste offline (sem chave)
 
@@ -80,11 +80,11 @@ Se aparecer `OK`, o seu Python e os scripts estão funcionando.
 
 ## Passo 4: rodar o método
 
-Todos os comandos abaixo rodam de dentro da pasta `scripts`, e os resultados vão para uma pasta `saidas`, que o Git ignora (assim você nunca a envia por engano):
+Todos os comandos abaixo rodam de dentro da pasta `scripts`, e os resultados vão para uma pasta `outputs`, que o Git ignora (assim você nunca a envia por engano):
 
 ```bash
 cd scripts
-mkdir -p ../saidas
+mkdir -p ../outputs
 ```
 
 Os modelos padrão são os usados nos testes (gpt-6-luna e gpt-6.1-sol). O gabarito do passo 4.6 usa por padrão o gpt-4.1, um terceiro modelo, separado dos que respondem. Você pode trocar qualquer um com `--modelo`.
@@ -112,32 +112,32 @@ A variável dura até você fechar o terminal; num terminal novo, defina de novo
 Este passo corta a conversa em blocos de poucas mensagens e numera cada um como B01, B02 e assim por diante. Ele roda offline. Para usar a sua conversa depois, exporte-a como texto, com cada mensagem num parágrafo começando com `[`.
 
 ```bash
-python marcar_blocos.py --conversa ../exemplo/conversa-sintetica.md --saida ../saidas/blocos.md --mensagens 3
+python mark_blocks.py --conversa ../examples/synthetic-conversation.md --saida ../outputs/blocos.md --mensagens 3
 ```
 
 Saída esperada com a conversa sintética:
 
 ```
-12 mensagens -> 4 blocos em ../saidas/blocos.md
+12 mensagens -> 4 blocos em ../outputs/blocos.md
 ```
 
-Abra `saidas/blocos.md` em qualquer editor de texto e você verá os títulos `## B01` a `## B04`.
+Abra `outputs/blocos.md` em qualquer editor de texto e você verá os títulos `## B01` a `## B04`.
 
 ### 4.2 Escrever a nota de estado
 
 ```bash
-python gerar_nota.py --conversa ../exemplo/conversa-sintetica.md --saida ../saidas/nota.md \
+python generate_note.py --conversa ../examples/synthetic-conversation.md --saida ../outputs/nota.md \
     --modelo gpt-6-luna --palavras 400 --formato refinado --modo unica
 ```
 
 `--formato refinado` pede dono e condição em cada pendência e uma seção de ponteiros; `--formato livre` é a nota livre do teste 1. `--modo unica` escreve em passada única (`cadeia` é a variante em cadeia); nos testes, passada única foi igual ou melhor.
 
-**Saída esperada (aproximada, varia por rodada):** uma nota de cerca de 256 palavras em `saidas/nota.md`.
+**Saída esperada (aproximada, varia por rodada):** uma nota de cerca de 256 palavras em `outputs/nota.md`.
 
 ### 4.3 Escrever o registro do dia, com IDs de origem
 
 ```bash
-python gerar_registro.py --blocos ../saidas/blocos.md --saida ../saidas/registro.md --modelo gpt-6-luna --linhas 150
+python generate_registry.py --blocos ../outputs/blocos.md --saida ../outputs/registro.md --modelo gpt-6-luna --linhas 150
 ```
 
 Cada linha tem o formato `- tipo | texto | fonte: B02`. O script já valida o resultado: confere se os IDs citados existem e se o bloco citado contém pelo menos metade das palavras-chave do item. É uma conferência aproximada; leia uma amostra você mesma. Nos testes, passar de 200 linhas quase não acrescentou.
@@ -178,53 +178,53 @@ Rodamos essa conferência com um `user_id` de teste separado, para o item de exe
 Opcionalmente, exporte as notas para uma pasta do [Obsidian](https://obsidian.md), com links `[[conceito]]` para a visão de grafo:
 
 ```bash
-python exportar_mem0.py --pasta ./Handoffs
+python export_mem0.py --pasta ./Handoffs
 ```
 
 Outras opções: `--user-id` (padrão `handoffs`), `--consulta` (padrão `handoff`) e `--conceitos` (padrão `Mem0,Handoff,Registro,Obsidian`).
 
 ### 4.5 Consultar no chat novo
 
-Cole só a nota de estado (`saidas/nota.md`) no chat novo. Quando ela não bastar, busque os 5 itens mais parecidos no registro e, se precisar do detalhe, traga o texto bruto dos blocos citados pelos IDs:
+Cole só a nota de estado (`outputs/nota.md`) no chat novo. Quando ela não bastar, busque os 5 itens mais parecidos no registro e, se precisar do detalhe, traga o texto bruto dos blocos citados pelos IDs:
 
 ```bash
-grep -A 20 "^## B02" ../saidas/blocos.md
+grep -A 20 "^## B02" ../outputs/blocos.md
 ```
 
-Não há um comando de busca avulso: a busca dos 5 itens é feita pelo `responder.py` na condição G0 (e G, que também traz os blocos citados). Para ver o que ela recupera, rode a condição G0 no passo 4.6 e leia o arquivo de respostas.
+Não há um comando de busca avulso: a busca dos 5 itens é feita pelo `answer.py` na condição G0 (e G, que também traz os blocos citados). Para ver o que ela recupera, rode a condição G0 no passo 4.6 e leia o arquivo de respostas.
 
 ### 4.6 Medir com a sua conversa
 
 Para repetir a medição, gere um gabarito e perguntas, avalie a nota e rode as condições de busca. Troque `minha-conversa.md` pelo caminho da sua conversa exportada e use a nota e o registro gerados a partir **dessa mesma** conversa. Esses arquivos contêm dados da sua conversa: nunca publique.
 
 ```bash
-python gerar_gabarito.py  --conversa minha-conversa.md --saida ../saidas/gabarito.json
-python gerar_perguntas.py --gabarito ../saidas/gabarito.json --saida ../saidas/perguntas.json
-python avaliar_nota.py    --nota ../saidas/nota.md --gabarito ../saidas/gabarito.json --juiz2 gpt-6.1-sol
-python responder.py --blocos ../saidas/blocos.md --nota ../saidas/nota.md --registro ../saidas/registro.md \
-    --perguntas ../saidas/perguntas.json --modelo gpt-6-luna --condicoes A,B,E,G0,G --saida ../saidas/respostas.json
+python generate_answer_key.py  --conversa minha-conversa.md --saida ../outputs/gabarito.json
+python generate_questions.py --gabarito ../outputs/gabarito.json --saida ../outputs/perguntas.json
+python evaluate_note.py    --nota ../outputs/nota.md --gabarito ../outputs/gabarito.json --juiz2 gpt-6.1-sol
+python answer.py --blocos ../outputs/blocos.md --nota ../outputs/nota.md --registro ../outputs/registro.md \
+    --perguntas ../outputs/perguntas.json --modelo gpt-6-luna --condicoes A,B,E,G0,G --saida ../outputs/respostas.json
 ```
 
-**Custo.** Cada etapa chama a API. O gabarito e as perguntas são uma chamada cada; `avaliar_nota.py` chama o juiz (Decisions API, gpt-6-luna) e, com `--juiz2`, também o gpt-6.1-sol; `responder.py` faz uma resposta e uma chamada de juiz por pergunta e condição, ou seja, 30 perguntas × 5 condições = 150 respostas mais 150 julgamentos. Se uma chamada falhar, as demais continuam e a falha fica marcada com `ok: null`.
+**Custo.** Cada etapa chama a API. O gabarito e as perguntas são uma chamada cada; `evaluate_note.py` chama o juiz (Decisions API, gpt-6-luna) e, com `--juiz2`, também o gpt-6.1-sol; `answer.py` faz uma resposta e uma chamada de juiz por pergunta e condição, ou seja, 30 perguntas × 5 condições = 150 respostas mais 150 julgamentos. Se uma chamada falhar, as demais continuam e a falha fica marcada com `ok: null`.
 
-A condição C ("Busca por conceitos", testes 4 e 6) não está nos scripts: ela dependia da estrutura gerada pelo Graphify e de scripts nossos não incluídos. Os números dela nas tabelas são só referência (ver [metodologia.md](metodologia.md)).
+A condição C ("Busca por conceitos", testes 4 e 6) não está nos scripts: ela dependia da estrutura gerada pelo Graphify e de scripts nossos não incluídos. Os números dela nas tabelas são só referência (ver [methodology.md](methodology.md)).
 
 <a id="aviso-sintetica"></a>
 A conversa sintética é curta demais para medir qualquer coisa; ela serve só para ver o formato e testar os comandos. O resultado que importa é o que você mede com a sua própria conversa.
 
-**Saída esperada (aproximada, varia por rodada)**, rodando estes comandos com `--conversa ../exemplo/conversa-sintetica.md`: um gabarito de 16 fatos (6 de peso 3, 8 de peso 2, 2 de peso 1) e 16 perguntas; `avaliar_nota.py` dá 16/16 com os dois juízes; `responder.py` dá 16/16 em cada condição, com média de tokens de entrada por pergunta de 427 (A), 450 (B), 744 (E), 590 (G0) e 862 (G). Os 100% são esperados e não significam nada: como diz o [aviso acima](#aviso-sintetica), a conversa sintética é curta demais para medir qualquer coisa.
+**Saída esperada (aproximada, varia por rodada)**, rodando estes comandos com `--conversa ../examples/synthetic-conversation.md`: um gabarito de 16 fatos (6 de peso 3, 8 de peso 2, 2 de peso 1) e 16 perguntas; `evaluate_note.py` dá 16/16 com os dois juízes; `answer.py` dá 16/16 em cada condição, com média de tokens de entrada por pergunta de 427 (A), 450 (B), 744 (E), 590 (G0) e 862 (G). Os 100% são esperados e não significam nada: como diz o [aviso acima](#aviso-sintetica), a conversa sintética é curta demais para medir qualquer coisa.
 
 ## Problemas comuns
 
 **`python: command not found` ou `'python' não é reconhecido`.** No macOS/Linux, use `python3`. No Windows, reinstale o Python marcando "Add python.exe to PATH" e abra um terminal novo.
 
-**`can't open file ... marcar_blocos.py`.** Você não está dentro da pasta `scripts`. Rode `cd scripts` a partir da pasta do repositório.
+**`can't open file ... mark_blocks.py`.** Você não está dentro da pasta `scripts`. Rode `cd scripts` a partir da pasta do repositório.
 
 **`Defina a variável de ambiente OPENAI_API_KEY antes de rodar.`** A chave não está definida neste terminal. Defina como em [Criar a sua chave da OpenAI](#criar-a-sua-chave-da-openai); ela some quando o terminal fecha.
 
 **`Erro 401: a chave em OPENAI_API_KEY é inválida, expirou ou não tem acesso.`** (ou `Erro 403`). A chave está errada, foi revogada ou não tem acesso ao modelo. Crie outra na [página de API keys](https://platform.openai.com/api-keys), confira se copiou inteira e sem espaços a mais, e veja se o pagamento está ativo. Nesse caso o script para na hora, sem tentar de novo.
 
-**`Erro 429` ou mensagens de limite.** Você bateu no limite de requisições ou acabou a cota. Os scripts tentam de novo sozinhos algumas vezes em erros 429 e 5xx; se continuar falhando, espere alguns minutos, reduza o paralelismo com `responder.py --paralelo 2` (padrão 8) ou confira a cota e o pagamento.
+**`Erro 429` ou mensagens de limite.** Você bateu no limite de requisições ou acabou a cota. Os scripts tentam de novo sozinhos algumas vezes em erros 429 e 5xx; se continuar falhando, espere alguns minutos, reduza o paralelismo com `answer.py --paralelo 2` (padrão 8) ou confira a cota e o pagamento.
 
 **`Defina MEM0_API_KEY no ambiente.`** Igual ao caso acima, para a chave do Mem0.
 

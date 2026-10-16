@@ -1,4 +1,4 @@
-<!-- BLOCOS DA CONVERSA SINTÉTICA (gerados por scripts/marcar_blocos.py). Dados fictícios. -->
+<!-- BLOCOS DA CONVERSA SINTÉTICA (gerados por scripts/mark_blocks.py). Dados fictícios. -->
 ## B01
 [Ana] Bom dia! Vamos fechar o plano do guia de testes de API para o time? A ideia é publicar no wiki interno da Loja Exemplo.
 

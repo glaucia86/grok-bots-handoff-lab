@@ -1,14 +1,14 @@
 """Gera a nota de estado (camada 1), em passada única ou em cadeia.
 
 Uso:
-  python gerar_nota.py --conversa conversa.md --saida nota.md --modelo gpt-6-luna \
+  python generate_note.py --conversa conversa.md --saida nota.md --modelo gpt-6-luna \
       [--palavras 400] [--formato livre|refinado] [--modo unica|cadeia] [--partes 5]
 
 formato livre    = seções Estado, Decisões, Pendências, Fontes e números, Próximo passo (teste 1)
 formato refinado = + responsável e condição em cada pendência e seção Ponteiros (teste 2; é a nota usada nas buscas)
 """
 import argparse, re
-from comum import chat
+from common import chat
 
 ap = argparse.ArgumentParser()
 ap.add_argument("--conversa", required=True); ap.add_argument("--saida", required=True)

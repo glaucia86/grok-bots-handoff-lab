@@ -54,16 +54,16 @@ No account and no API key needed for these three steps. On Windows, use Git Bash
 
 1. **Install [Python](https://www.python.org/downloads/) 3.9+** and download this repository (green **Code** button > **Download ZIP**, or `git clone https://github.com/glaucia86/grok-bots-handoff-lab.git`).
 2. **Open a terminal in the repository folder and run the offline test:** `python -m unittest discover -s tests`. You should see `OK`.
-3. **Cut the example conversation into blocks:** `cd scripts`, `mkdir -p ../saidas`, then `python marcar_blocos.py --conversa ../exemplo/conversa-sintetica.md --saida ../saidas/blocos.md --mensagens 3`. You should see `12 mensagens -> 4 blocos em ../saidas/blocos.md`.
+3. **Cut the example conversation into blocks:** `cd scripts`, `mkdir -p ../outputs`, then `python mark_blocks.py --conversa ../examples/synthetic-conversation.md --saida ../outputs/blocos.md --mensagens 3`. You should see `12 mensagens -> 4 blocos em ../outputs/blocos.md`.
 
 It works. Now follow the [step-by-step tutorial](docs/en/tutorial.md) for the rest: state note, registry, Mem0 and measurement.
 
 ## How to use this tutorial
 
-If you have never programmed, read the **step-by-step tutorial** from the top: it explains installing Python, opening a terminal and every command, with the expected output and a troubleshooting section. If you already code, [Run locally](#run-locally) is enough, and [Results](#results) summarizes what was measured. The scripts, their messages and the example files are in Portuguese; that does not change how they run. Every name in [exemplo/](exemplo) (Ana, Bruno, Loja Exemplo and others) is fictional.
+If you have never programmed, read the **step-by-step tutorial** from the top: it explains installing Python, opening a terminal and every command, with the expected output and a troubleshooting section. If you already code, [Run locally](#run-locally) is enough, and [Results](#results) summarizes what was measured. The scripts, their messages and the example files are in Portuguese; that does not change how they run. Every name in [examples/](examples) (Ana, Bruno, Loja Exemplo and others) is fictional.
 
 - 🇺🇸 [Step-by-step tutorial (English)](docs/en/tutorial.md) · [Methodology](docs/en/methodology.md) · [The 7 tests](docs/en/tests.md)
-- 🇧🇷 [Tutorial passo a passo (Português)](docs/pt-br/tutorial.md) · [Metodologia](docs/pt-br/metodologia.md) · [Os 7 testes](docs/pt-br/testes.md)
+- 🇧🇷 [Tutorial passo a passo (Português)](docs/pt-br/tutorial.md) · [Metodologia](docs/pt-br/methodology.md) · [Os 7 testes](docs/pt-br/tests.md)
 
 ## Run locally
 
@@ -71,30 +71,30 @@ After the quick start, the full path needs an [OpenAI API key](https://platform.
 
 ```bash
 export OPENAI_API_KEY="..."               # PowerShell: $env:OPENAI_API_KEY="..."
-python gerar_nota.py --conversa ../exemplo/conversa-sintetica.md --saida ../saidas/nota.md \
+python generate_note.py --conversa ../examples/synthetic-conversation.md --saida ../outputs/nota.md \
     --modelo gpt-6-luna --palavras 400 --formato refinado --modo unica
-python gerar_registro.py --blocos ../saidas/blocos.md --saida ../saidas/registro.md --modelo gpt-6-luna --linhas 150
+python generate_registry.py --blocos ../outputs/blocos.md --saida ../outputs/registro.md --modelo gpt-6-luna --linhas 150
 ```
 
 Steps 4.4 (Mem0), 4.5 (querying in a new chat) and 4.6 (measuring with your own conversation, including the API cost of each step) are in the [tutorial](docs/en/tutorial.md#step-4-run-the-method).
 
 ## How it works
 
-![The chat as a cache, memory outside](diagramas/en/diagrama-1-cache-e-memoria.png)
+![The chat as a cache, memory outside](diagrams/en/diagram-1-cache-and-memory.png)
 
 The stack is small, and every piece is optional except the format. **Blocks with IDs** are the raw source: the conversation cut into excerpts of a few messages (3 messages and about 1.7 KB each in the tests), numbered B01, B02 and so on. The **state note**, 60 to 90 lines, is rewritten at every update and answers where we are, what was decided, what is pending with owner and condition, and what comes next. The **day registry**, 150 to 200 lines, has one item per line in the format `- tipo | texto | fonte: B07,B08`, and is never rewritten once saved. It is the same logic as grepping by source IDs in code, and in this conversation a simple BM25 over the items was enough.
 
-![Registry with source ID](diagramas/en/diagrama-5-registro-com-id.png)
+![Registry with source ID](diagrams/en/diagram-5-registry-with-id.png)
 
 To keep the layers off your machine we use [Mem0](https://mem0.ai), always with `"infer": false`, so the text is stored without rewriting and the IDs survive. [Obsidian](https://obsidian.md) is optional, to view the notes as a graph. [Graphify](https://github.com/Graphify-Labs/graphify) was tested but is not part of the recipe for chats (see test 5).
 
-![Handoff flow](diagramas/en/diagrama-2-fluxo-handoff.png)
+![Handoff flow](diagrams/en/diagram-2-handoff-flow.png)
 
 ## Results
 
 The short version: a 250-word note alone kept 28% to 40% of the weight of the facts; the 400-word note used in the retrieval tests answered 12 of 30 questions. The 400-word note plus registry items plus the source blocks they cite (condition G) answered 26 and 25 of 30, within 1-3 of the full chat, with about 21-22% of the tokens. Graphify as context and model-generated typed IDs did not help. The full tables are below.
 
-![How the tests were set up](diagramas/en/diagrama-4-metodo.png)
+![How the tests were set up](diagrams/en/diagram-4-method.png)
 
 <details>
 <summary><strong>Show all result tables (tests 1 to 7)</strong></summary>
@@ -200,14 +200,14 @@ The most important missing test uses questions written by hand, without looking 
 README.md / README.pt-br.md   this page, in English and Portuguese
 docs/en/                      tutorial, methodology and the 7 tests (English)
 docs/pt-br/                   the same, in Portuguese
-diagramas/                    PNG, SVG and Excalidraw sources (Portuguese labels)
-diagramas/en/                 the same diagrams with English labels
+diagrams/                    PNG, SVG and Excalidraw sources (Portuguese labels)
+diagrams/en/                 the same diagrams with English labels
 scripts/                      Python scripts (standard library only)
 tests/                        offline test, no API key needed
-exemplo/                      SYNTHETIC conversation, blocks, sample handoff and handoff template
+examples/                      SYNTHETIC conversation, blocks, sample handoff and handoff template
 ```
 
-Every name in [exemplo/](exemplo) (Ana, Bruno, Loja Exemplo and others) is fictional.
+Every name in [examples/](examples) (Ana, Bruno, Loja Exemplo and others) is fictional.
 
 ## About me
 

@@ -1,13 +1,13 @@
 """Gera perguntas pontuais a partir do gabarito (nos testes: 30 perguntas, 9/11/10 por peso, gpt-6.1-sol).
 
 Uso:
-  python gerar_perguntas.py --gabarito gabarito.json --saida perguntas.json [--modelo gpt-6.1-sol] [--p3 9 --p2 11 --p1 10]
+  python generate_questions.py --gabarito gabarito.json --saida perguntas.json [--modelo gpt-6.1-sol] [--p3 9 --p2 11 --p1 10]
 
 Limite conhecido: perguntas geradas a partir dos fatos favorecem a busca por palavras-chave.
 O ideal é escrever as perguntas à mão, sem olhar o gabarito.
 """
 import argparse, json
-from comum import chat, salvar_json
+from common import chat, salvar_json
 
 ap = argparse.ArgumentParser()
 ap.add_argument("--gabarito", required=True); ap.add_argument("--saida", required=True)

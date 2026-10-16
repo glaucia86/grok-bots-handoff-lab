@@ -1,4 +1,4 @@
-<!-- EXEMPLO SINTÉTICO, preenchido a partir de exemplo/conversa-sintetica.md. Dados fictícios. Escrito à mão, não gerado por modelo. -->
+<!-- EXEMPLO SINTÉTICO, preenchido a partir de examples/synthetic-conversation.md. Dados fictícios. Escrito à mão, não gerado por modelo. -->
 
 # Camada 1: nota de estado
 
@@ -7,7 +7,7 @@ agente: assistente
 data: 2026-01-12
 tipo: estado
 conceitos: [[Handoff]] [[Registro]]
-fonte: exemplo/conversa-sintetica.md
+fonte: examples/synthetic-conversation.md
 ---
 
 ## 1. Estado
@@ -32,8 +32,8 @@ Risco: revisão do Bruno atrasar; plano B é publicar partes 1 e 2 e a parte 3 n
 Assistente escreve a parte 1 hoje e envia para a Ana revisar amanhã de manhã. (fonte: B04)
 
 ## 7. Ponteiros
-Registro do dia: exemplo/handoff-sintetico.md, camada 2.
-Blocos brutos: exemplo/blocos-sinteticos.md (B01 a B04).
+Registro do dia: examples/synthetic-handoff.md, camada 2.
+Blocos brutos: examples/synthetic-blocks.md (B01 a B04).
 
 # Camada 2: registro do dia
 
